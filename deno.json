@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "~/": "./"
+  },
+  "tasks": {
+    "test": "deno run -A ./test/test.ts"
+  }
+}
