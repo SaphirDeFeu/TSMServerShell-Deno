@@ -100,8 +100,10 @@ export class ServerShell {
         this.useStatic(pathnameDir, pathnameRoute);
       } else if(entry.isFile) {
         const contents = new TextDecoder('utf-8').decode(Deno.readFileSync(pathnameDir));
-        const extension = entry.name.split('.')[1];
-        const name = entry.name.split('.')[0];
+        const splitFileName = entry.name.split('.');
+        const extension = splitFileName[splitFileName.length - 1];
+        splitFileName.pop();
+        const name = splitFileName.join('.');
         if(name == "index" && extension == "html") {
           pathnameRoute = join(pathnameRoute, '..');
         }
@@ -142,7 +144,7 @@ export class ServerShell {
    */
   get(path: string, listener: (req: Request, info: Deno.ServeHandlerInfo) => Promise<ResponseConstructor>) {
     this.routes.forEach((route) => {
-      if(route.path == path) {
+      if(route.path == path && route.method == "GET") {
         throw new RouteAlreadyBoundError(path);
       }
     });
@@ -159,7 +161,7 @@ export class ServerShell {
    */
   post(path: string, listener: (req: Request, info: Deno.ServeHandlerInfo) => Promise<ResponseConstructor>) {
     this.routes.forEach((route) => {
-      if(route.path == path) {
+      if(route.path == path && route.method == "POST") {
         throw new RouteAlreadyBoundError(path);
       }
     });
@@ -176,7 +178,7 @@ export class ServerShell {
    */
   put(path: string, listener: (req: Request, info: Deno.ServeHandlerInfo) => Promise<ResponseConstructor>) {
     this.routes.forEach((route) => {
-      if(route.path == path) {
+      if(route.path == path && route.method == "PUT") {
         throw new RouteAlreadyBoundError(path);
       }
     });
@@ -193,7 +195,7 @@ export class ServerShell {
    */
   delete(path: string, listener: (req: Request, info: Deno.ServeHandlerInfo) => Promise<ResponseConstructor>) {
     this.routes.forEach((route) => {
-      if(route.path == path) {
+      if(route.path == path && route.method == "DELETE") {
         throw new RouteAlreadyBoundError(path);
       }
     });
