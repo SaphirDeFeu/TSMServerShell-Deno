@@ -144,7 +144,7 @@ export class ServerShell {
    */
   get(path: string, listener: (req: Request, info: Deno.ServeHandlerInfo) => Promise<ResponseConstructor>) {
     this.routes.forEach((route) => {
-      if(route.path == path && route.method == "GET") {
+      if(route.path == path && (route.method == "GET" || route.method == "ANY")) {
         throw new RouteAlreadyBoundError(path);
       }
     });
@@ -161,7 +161,7 @@ export class ServerShell {
    */
   post(path: string, listener: (req: Request, info: Deno.ServeHandlerInfo) => Promise<ResponseConstructor>) {
     this.routes.forEach((route) => {
-      if(route.path == path && route.method == "POST") {
+      if(route.path == path && (route.method == "POST" || route.method == "ANY")) {
         throw new RouteAlreadyBoundError(path);
       }
     });
@@ -178,7 +178,7 @@ export class ServerShell {
    */
   put(path: string, listener: (req: Request, info: Deno.ServeHandlerInfo) => Promise<ResponseConstructor>) {
     this.routes.forEach((route) => {
-      if(route.path == path && route.method == "PUT") {
+      if(route.path == path && (route.method == "PUT" || route.method == "ANY")) {
         throw new RouteAlreadyBoundError(path);
       }
     });
@@ -195,7 +195,7 @@ export class ServerShell {
    */
   delete(path: string, listener: (req: Request, info: Deno.ServeHandlerInfo) => Promise<ResponseConstructor>) {
     this.routes.forEach((route) => {
-      if(route.path == path && route.method == "DELETE") {
+      if(route.path == path && (route.method == "DELETE" || route.method == "ANY")) {
         throw new RouteAlreadyBoundError(path);
       }
     });
