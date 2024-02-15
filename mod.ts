@@ -1,13 +1,13 @@
 import { join } from "https://deno.land/std@0.215.0/path/join.ts";
 
-class RouteAlreadyBoundError extends Error {
+export class RouteAlreadyBoundError extends Error {
   constructor(route: string) {
     super(`Route "${route}" is already bound.`);
     this.name = "RouteAlreadyBoundError";
   }
 }
 
-class Route {
+export class Route {
   path: string;
   method: string;
   callback: (req: Request, info: Deno.ServeHandlerInfo) => Promise<ResponseConstructor>
@@ -31,7 +31,7 @@ export interface ResponseConstructor {
   init?: ResponseInit,
 };
 
-export default class ServerShell {
+export class ServerShell {
   private routes: Array<Route> = [];
   private middleware: (req: Request, info: Deno.ServeHandlerInfo) => void = () => {};
   private config: Deno.ServeOptions;
@@ -71,6 +71,8 @@ export default class ServerShell {
 
       for (const route of this.routes) {
         if(route.equals(pathname, method)) {
+          returnvalue = await route.callback(req, info);
+        } else if(route.path == pathname && route.method == "ANY") {
           returnvalue = await route.callback(req, info);
         }
       }
@@ -163,22 +165,79 @@ export default class ServerShell {
     });
     this.routes.push(new Route(path, "POST", listener));
   }
+
+  /**
+   * Binds a new route at `path` to a PUT listener
+   * @date 2/14/2024 - 7:09:49 PM
+   *
+   * @param {string} path - The path at which the route will take effect. Must start with a `/`
+   * @param {(req: Request, info: Deno.ServeHandlerInfo) => Promise<ResponseConstructor>} listener - The function that will be run when a request arrives at the specified route
+   * @throws `RouteAlreadyBoundError` if the `path` at which we're binding the route is already bound to another route
+   */
+  put(path: string, listener: (req: Request, info: Deno.ServeHandlerInfo) => Promise<ResponseConstructor>) {
+    this.routes.forEach((route) => {
+      if(route.path == path) {
+        throw new RouteAlreadyBoundError(path);
+      }
+    });
+    this.routes.push(new Route(path, "PUT", listener));
+  }
+
+  /**
+   * Binds a new route at `path` to a DELETE listener
+   * @date 2/14/2024 - 7:09:49 PM
+   *
+   * @param {string} path - The path at which the route will take effect. Must start with a `/`
+   * @param {(req: Request, info: Deno.ServeHandlerInfo) => Promise<ResponseConstructor>} listener - The function that will be run when a request arrives at the specified route
+   * @throws `RouteAlreadyBoundError` if the `path` at which we're binding the route is already bound to another route
+   */
+  delete(path: string, listener: (req: Request, info: Deno.ServeHandlerInfo) => Promise<ResponseConstructor>) {
+    this.routes.forEach((route) => {
+      if(route.path == path) {
+        throw new RouteAlreadyBoundError(path);
+      }
+    });
+    this.routes.push(new Route(path, "DELETE", listener));
+  }
+
+  /**
+   * Binds a new route at `path` to a listener for any request method.
+   * @date 2/14/2024 - 7:09:49 PM
+   *
+   * @param {string} path - The path at which the route will take effect. Must start with a `/`
+   * @param {(req: Request, info: Deno.ServeHandlerInfo) => Promise<ResponseConstructor>} listener - The function that will be run when a request arrives at the specified route
+   * @throws `RouteAlreadyBoundError` if the `path` at which we're binding the route is already bound to another route
+   */
+  any(path: string, listener: (req: Request, info: Deno.ServeHandlerInfo) => Promise<ResponseConstructor>) {
+    this.routes.forEach((route) => {
+      if(route.path == path) {
+        throw new RouteAlreadyBoundError(path);
+      }
+    });
+    this.routes.push(new Route(path, "ANY", listener));
+  }
 }
 
 function MIMEFromExt(extension: string): string {
   switch(extension) {
-    // Common HTML document extensions
+    // text/
     case "html": case "htm": return 'text/html';
     case "css": return 'text/css';
     case "js": case "mjs": return 'text/javascript';
-    case "php": return "application/x-httpd-php";
-    // Media formats
+    case "txt": return 'text/plain';
+    // image/
     case "svg": return 'image/svg+xml';
     case "apng": return 'image/apng';
+    case "png": return 'image/png';
     case "gif": return 'image/gif';
     case "jpg": case "jpeg": return 'image/jpeg';
     case "ico": return 'image/vnd.microsoft.icon';
-    // Data types
+    case "mp4": return 'video/mp4';
+    case "mpeg": return 'video/mpeg';
+    case "ogv": return 'video/ogg';
+    case "mp3": return 'audio/mpeg';
+    case "oga": return 'audio/ogg';
+    // application/
     case "json": return 'application/json';
     case "xml": return 'application/xml';
     case "zip": return 'application/zip';
@@ -186,10 +245,16 @@ function MIMEFromExt(extension: string): string {
     case "rar": return 'application/vnd.rar';
     case "tar": return 'application/x-tar';
     case "gz": return 'application/gzip';
-    // Fonts
+    case "php": return 'application/x-httpd-php';
+    case "pdf": return 'application/pdf';
+    case "sh": return 'application/x-sh';
+    // font/
     case "otf": return 'font/otf';
     case "ttf": return 'font/ttf';
     
-    default: return 'text/plain';
+    default: {
+      console.log(`Encountered unknown extension while generating static routes: .${extension} - If you want this fixed as quickly as possible, open an issue at https://github.com/SaphirDeFeu/TSMServerShell-Deno/issues`);
+      return 'text/plain';
+    };
   }
 }

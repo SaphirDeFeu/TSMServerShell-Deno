@@ -5,6 +5,8 @@ Minimalist server creation and management library
 # Usage
 ### Create a server from the ServerShell and start listening :
 ```js
+import { ServerShell } from 'https://deno.land/x/tsmservershell/mod.ts';
+
 const app = new ServerShell()
 
 app.listen()
