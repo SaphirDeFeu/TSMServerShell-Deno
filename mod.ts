@@ -169,6 +169,23 @@ export class ServerShell {
   }
 
   /**
+   * Binds a new route at `path` to an OPTIONS listener
+   * @date 2/14/2024 - 7:09:49 PM
+   *
+   * @param {string} path - The path at which the route will take effect. Must start with a `/`
+   * @param {(req: Request, info: Deno.ServeHandlerInfo) => Promise<ResponseConstructor>} listener - The function that will be run when a request arrives at the specified route
+   * @throws `RouteAlreadyBoundError` if the `path` at which we're binding the route is already bound to another route
+   */
+  options(path: string, listener: (req: Request, info: Deno.ServeHandlerInfo) => Promise<ResponseConstructor>) {
+    this.routes.forEach((route) => {
+      if(route.path == path && (route.method == "OPTIONS" || route.method == "ANY")) {
+        throw new RouteAlreadyBoundError(path);
+      }
+    });
+    this.routes.push(new Route(path, "OPTIONS", listener));
+  }
+
+  /**
    * Binds a new route at `path` to a PUT listener
    * @date 2/14/2024 - 7:09:49 PM
    *
